@@ -17,16 +17,23 @@ class Object(models.Model):
     parents = models.ManyToManyField('self', related_name='children', symmetrical=False, through='Relationship')
     observers = models.ManyToManyField('self', related_name='observing', symmetrical=False, through='Observation')
     
-    def __unicode__(self):
+    def __str__(self):
         return "#%s (%s)" % (self.id, self.name)
+    __unicode__ = __str__
 
 class Relationship(models.Model):
     class Meta:
         db_table = 'object_relation'
+        verbose_name = 'Parent'
+        verbose_name_plural = 'Parents'
     
     child = models.ForeignKey(Object, related_name='parent', on_delete=models.CASCADE)
     parent = models.ForeignKey(Object, related_name='child', on_delete=models.CASCADE)
     weight = models.IntegerField(default=0)
+    
+    def __str__(self):
+        return "%s > %s" % (self.parent, self.child)
+    __unicode__ = __str__
 
 class Observation(models.Model):
     class Meta:
@@ -54,10 +61,11 @@ class Verb(models.Model):
     ability = models.BooleanField()
     method = models.BooleanField()
     
-    def __unicode__(self):
+    def __str__(self):
         return "%s {#%s on %s}" % (
             self.annotated(), self.id, self.origin
         )
+    __unicode__ = __str__
     
     def annotated(self):
         ability_decoration = ['', '@'][self.ability]
@@ -75,11 +83,11 @@ class VerbName(models.Model):
     verb = models.ForeignKey(Verb, related_name='names', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     
-    def __unicode__(self):
+    def __str__(self):
         return "%s {#%s on %s}" % (
             self.name, self.verb.id, self.verb.origin
         )
-
+    __unicode__ = __str__
 
 class Property(models.Model):
     class Meta:
@@ -92,8 +100,9 @@ class Property(models.Model):
     owner = models.ForeignKey(Object, related_name='+', null=True, on_delete=models.SET_NULL)
     origin = models.ForeignKey(Object, related_name='properties', on_delete=models.CASCADE)
     
-    def __unicode__(self):
+    def __str__(self):
         return '%s {#%s on %s}' % (self.name, self.id, self.origin)
+    __unicode__ = __str__
 
 class Permission(models.Model):
     class Meta:
@@ -101,8 +110,9 @@ class Permission(models.Model):
     
     name = models.CharField(max_length=255)
     
-    def __unicode__(self):
+    def __str__(self):
         return self.name
+    __unicode__ = __str__
 
 class Access(models.Model):
     class Meta:
@@ -142,7 +152,7 @@ class Access(models.Model):
         else:
             return self.property.origin
     
-    def __unicode__(self):
+    def __str__(self):
         try:
             return '%(rule)s %(actor)s %(permission)s on %(entity)s (%(weight)s)' % dict(
                 rule        = self.rule,
@@ -155,14 +165,16 @@ class Access(models.Model):
             import traceback
             traceback.print_exc();
             return str(e)
+    __unicode__ = __str__
 
 class Player(models.Model):
     class Meta:
         db_table = 'player'
         app_label = 'core'
     
-    def __unicode__(self):
-        return self.email
+    def __str__(self):
+        return self.avatar.name
+    __unicode__ = __str__
 
     def is_authenticated(self):
         return True
